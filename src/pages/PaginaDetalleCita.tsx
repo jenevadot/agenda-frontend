@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Header, SpinnerCarga, MensajeError } from '../components/comunes';
-import { DetalleCita, DialogoCancelacion } from '../components/citas';
+import { DetalleCita, DialogoCancelacion, ModalFeedbackCita } from '../components/citas';
 import { useCita, useCancelarCita } from '../hooks';
 
 /**
@@ -15,6 +15,7 @@ export default function PaginaDetalleCita() {
   const navigate = useNavigate();
 
   const [mostrarDialogoCancelar, setMostrarDialogoCancelar] = useState(false);
+  const [mostrarModalFeedback, setMostrarModalFeedback] = useState(false);
 
   // Fetch appointment details
   const { data: cita, isLoading, error, refetch } = useCita(
@@ -53,6 +54,12 @@ export default function PaginaDetalleCita() {
     }
   };
 
+  const handleRebook = () => {
+    if (negocioId && citaId) {
+      navigate(`/rebook/${negocioId}/${citaId}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -88,6 +95,8 @@ export default function PaginaDetalleCita() {
             cita={cita}
             onCancelar={handleCancelar}
             onEditar={handleEditar}
+            onRebook={handleRebook}
+            onFeedback={() => setMostrarModalFeedback(true)}
             isCancelando={isCancelando}
           />
         )}
@@ -101,6 +110,14 @@ export default function PaginaDetalleCita() {
           onConfirmar={handleConfirmarCancelacion}
           onCerrar={() => setMostrarDialogoCancelar(false)}
           isLoading={isCancelando}
+        />
+      )}
+
+      {/* Feedback modal */}
+      {cita && mostrarModalFeedback && (
+        <ModalFeedbackCita
+          cita={cita}
+          onCerrar={() => setMostrarModalFeedback(false)}
         />
       )}
     </div>

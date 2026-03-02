@@ -179,6 +179,7 @@ export function CalendarioAgenda({ negocioId }: Props) {
       {citaSeleccionada && (
         <ModalDetalleCitaAdmin
           cita={citaSeleccionada}
+          negocioId={negocioId}
           onCerrar={() => setCitaSeleccionada(null)}
         />
       )}

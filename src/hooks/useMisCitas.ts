@@ -7,11 +7,14 @@ import {
   iniciarEdicionCita,
   confirmarEdicionCita,
   cancelarEdicionCita,
+  crearFeedbackCita,
   type ParametrosMisCitas,
   type ListaCitasRespuesta,
   type CitaCompleta,
   type DatosEditarCita,
   type DatosConfirmarEdicion,
+  type DatosCrearFeedback,
+  type FeedbackCita,
 } from '../api/citas';
 import { useNotificacion } from '../components/comunes/Notificacion';
 import type { ErrorApi } from '../tipos';
@@ -161,6 +164,33 @@ export function useCancelarEdicionCita() {
 
     onError: (error) => {
       const mensaje = error.response?.data?.mensaje || 'Error al cancelar la edicion';
+      mostrarError(mensaje);
+    },
+  });
+}
+
+/**
+ * Hook for creating feedback for a completed appointment
+ * POST /api/v1/citas/{citaId}/feedback
+ */
+export function useCrearFeedback() {
+  const queryClient = useQueryClient();
+  const { mostrarExito, mostrarError } = useNotificacion();
+
+  return useMutation<
+    FeedbackCita,
+    AxiosError<ErrorApi>,
+    { citaId: string; datos: DatosCrearFeedback }
+  >({
+    mutationFn: ({ citaId, datos }) => crearFeedbackCita(citaId, datos),
+
+    onSuccess: () => {
+      mostrarExito('Gracias por tu feedback');
+      queryClient.invalidateQueries({ queryKey: ['citas', 'me'] });
+    },
+
+    onError: (error) => {
+      const mensaje = error.response?.data?.mensaje || 'Error al enviar el feedback';
       mostrarError(mensaje);
     },
   });

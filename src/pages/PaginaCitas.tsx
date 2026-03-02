@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { parseISO, isFuture, isPast, isToday } from 'date-fns';
 import { Header, Button, MensajeError } from '../components/comunes';
-import { ListaCitas } from '../components/citas';
+import { ListaCitas, ModalFeedbackCita } from '../components/citas';
 import { useMisCitas, useCancelarCita } from '../hooks';
+import { useMisPreferencias } from '../hooks/useUsuario';
 import { cn } from '../lib/utils';
 import type { CitaCompleta } from '../api/citas';
 
@@ -73,19 +74,48 @@ function ordenarCitas(citas: CitaCompleta[]): CitaCompleta[] {
 
 /**
  * PaginaCitas - User appointments page
- * Shows list of user's appointments with filtering
+ * Shows list of user's appointments with filtering.
+ * Auto-triggers feedback modal for the first past appointment without feedback.
  * Implements RF-FE-032 through RF-FE-036
  */
 export default function PaginaCitas() {
   const navigate = useNavigate();
   const [filtroActual, setFiltroActual] = useState<FiltroEstado>('todas');
   const [citaCancelando, setCitaCancelando] = useState<string | null>(null);
+  const [citaFeedbackActual, setCitaFeedbackActual] = useState<CitaCompleta | null>(null);
+  const [bannerDescartado, setBannerDescartado] = useState(false);
+  const feedbackModalShown = useRef(false);
 
   // Fetch user appointments
   const { data, isLoading, error } = useMisCitas();
 
+  // Preferences (for banner)
+  const { data: preferencias, isLoading: cargandoPrefs } = useMisPreferencias();
+  const mostrarBanner = !cargandoPrefs && preferencias === null && !bannerDescartado;
+
   // Cancel appointment mutation
   const { mutate: cancelarCita } = useCancelarCita();
+
+  // First past appointment that needs feedback (completed/confirmada, no feedback yet)
+  const citaNecesitaFeedback = useMemo<CitaCompleta | null>(() => {
+    if (!data?.citas) return null;
+    return (
+      data.citas.find(
+        (c) =>
+          isPast(parseISO(c.fechaHoraFin)) &&
+          (c.estado === 'completada' || c.estado === 'confirmada') &&
+          !c.tieneFeedback
+      ) ?? null
+    );
+  }, [data?.citas]);
+
+  // Auto-trigger feedback modal once per session
+  useEffect(() => {
+    if (citaNecesitaFeedback && !feedbackModalShown.current) {
+      feedbackModalShown.current = true;
+      setCitaFeedbackActual(citaNecesitaFeedback);
+    }
+  }, [citaNecesitaFeedback]);
 
   // Filter and sort appointments
   const citasFiltradas = useMemo(() => {
@@ -140,6 +170,25 @@ export default function PaginaCitas() {
           </Button>
         </div>
 
+        {/* Preferences banner */}
+        {mostrarBanner && (
+          <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-6 text-sm">
+            <p className="text-gray-700">
+              Completa tus preferencias para recibir recomendaciones personalizadas.{' '}
+              <Link to="/cuenta" className="font-medium text-black underline underline-offset-2">
+                Configurar ahora
+              </Link>
+            </p>
+            <button
+              onClick={() => setBannerDescartado(true)}
+              className="ml-4 text-gray-400 hover:text-black transition-colors"
+              aria-label="Cerrar banner"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Filter tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {FILTROS.map((filtro) => (
@@ -190,6 +239,14 @@ export default function PaginaCitas() {
           <Plus className="w-6 h-6" />
         </button>
       </main>
+
+      {/* Feedback modal - auto-triggered for first past appointment without feedback */}
+      {citaFeedbackActual && (
+        <ModalFeedbackCita
+          cita={citaFeedbackActual}
+          onCerrar={() => setCitaFeedbackActual(null)}
+        />
+      )}
     </div>
   );
 }

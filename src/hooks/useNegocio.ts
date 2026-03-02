@@ -10,6 +10,8 @@ import {
   crearExcepcion,
   eliminarExcepcion,
   obtenerCitasNegocio,
+  marcarNoShow,
+  obtenerPersonalNegocio,
   type HorarioSemana,
   type DatosExcepcion,
   type FiltrosCitasNegocio,
@@ -145,5 +147,40 @@ export function useCitasNegocio(negocioId: string, filtros: FiltrosCitasNegocio)
     enabled: !!negocioId && !!filtros.fechaInicio && !!filtros.fechaFin,
     staleTime: 30000,
     refetchInterval: 60000, // Refresh every minute
+  });
+}
+
+/**
+ * Hook for marking an appointment as no-show (owner only)
+ * PATCH /api/v1/negocios/{negocioId}/citas/{citaId}/no-show
+ */
+export function useMarcarNoShow() {
+  const queryClient = useQueryClient();
+  const { mostrarExito, mostrarError } = useNotificacion();
+
+  return useMutation<void, AxiosError<ErrorApi>, { negocioId: string; citaId: string }>({
+    mutationFn: ({ negocioId, citaId }) => marcarNoShow(negocioId, citaId),
+
+    onSuccess: () => {
+      mostrarExito('Cita marcada como no asistio');
+      queryClient.invalidateQueries({ queryKey: ['citas', 'negocio'] });
+    },
+
+    onError: (error) => {
+      const mensaje = error.response?.data?.mensaje || 'Error al marcar la cita';
+      mostrarError(mensaje);
+    },
+  });
+}
+
+/**
+ * Hook for fetching active staff of a business (for preferences form)
+ */
+export function usePersonalNegocio(negocioId: string | null) {
+  return useQuery({
+    queryKey: ['personal', 'negocio', negocioId],
+    queryFn: () => obtenerPersonalNegocio(negocioId!),
+    enabled: !!negocioId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

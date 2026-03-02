@@ -1,8 +1,8 @@
-import { Calendar, Clock, MapPin, Scissors, X, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, MapPin, Scissors, X, ChevronRight, RefreshCw } from 'lucide-react';
 import { format, parseISO, isPast, isFuture, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { Button, DialogoConfirmacion } from '../comunes';
 import type { CitaCompleta, EstadoCita } from '../../api/citas';
@@ -94,6 +94,7 @@ function calcularDuracion(inicio: string, fin: string): number {
  */
 export function TarjetaCita({ cita, onCancelar, isCancelando }: TarjetaCitaProps) {
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const navigate = useNavigate();
 
   const configEstado = obtenerConfigEstado(cita.estado);
   const fechaCita = parseISO(cita.fechaHoraInicio);
@@ -101,6 +102,8 @@ export function TarjetaCita({ cita, onCancelar, isCancelando }: TarjetaCitaProps
   const esPasada = isPast(fechaCita) && !isToday(fechaCita);
   const puedeCancelar =
     esProxima && (cita.estado === 'confirmada' || cita.estado === 'pendiente_actualizacion');
+  const puedeReservarDeNuevo =
+    esPasada || cita.estado === 'cancelada' || cita.estado === 'completada' || cita.estado === 'no_show';
 
   const duracion = calcularDuracion(cita.fechaHoraInicio, cita.fechaHoraFin);
 
@@ -185,18 +188,30 @@ export function TarjetaCita({ cita, onCancelar, isCancelando }: TarjetaCitaProps
         </Link>
 
         {/* Actions */}
-        {puedeCancelar && (
-          <div className="px-6 pb-6 pt-2 border-t border-gray-50">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCancelar}
-              disabled={isCancelando}
-              className="text-error hover:text-error-dark hover:bg-error-light"
-            >
-              <X className="w-4 h-4 mr-2" />
-              {isCancelando ? 'Cancelando...' : 'Cancelar cita'}
-            </Button>
+        {(puedeCancelar || puedeReservarDeNuevo) && (
+          <div className="px-6 pb-6 pt-2 border-t border-gray-50 flex items-center gap-3">
+            {puedeCancelar && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelar}
+                disabled={isCancelando}
+                className="text-error hover:text-error-dark hover:bg-error-light"
+              >
+                <X className="w-4 h-4 mr-2" />
+                {isCancelando ? 'Cancelando...' : 'Cancelar cita'}
+              </Button>
+            )}
+            {puedeReservarDeNuevo && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate(`/rebook/${cita.negocio.id}/${cita.id}`)}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Reservar de nuevo
+              </Button>
+            )}
           </div>
         )}
       </div>

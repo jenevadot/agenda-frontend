@@ -1,5 +1,5 @@
 import clienteApi from './cliente';
-import type { Negocio, HorarioNegocio, FechaExcepcion, CrearNegocioRequest } from '../tipos';
+import type { Negocio, HorarioNegocio, FechaExcepcion, CrearNegocioRequest, PersonalResumen } from '../tipos';
 
 /**
  * Backend response types
@@ -289,4 +289,32 @@ export async function obtenerCitasNegocio(
     `/negocios/${negocioId}/citas?${params.toString()}`
   );
   return response.data.citas.map(transformarCitaNegocio);
+}
+
+/**
+ * Mark an appointment as no-show (owner only)
+ * PATCH /api/v1/negocios/{negocioId}/citas/{citaId}/no-show
+ */
+export async function marcarNoShow(
+  negocioId: string,
+  citaId: string
+): Promise<void> {
+  await clienteApi.patch(`/negocios/${negocioId}/citas/${citaId}/no-show`);
+}
+
+interface PersonalBackend {
+  id: string;
+  nombre: string;
+  activo: boolean;
+}
+
+/**
+ * Get staff for a business (for preferences form)
+ * GET /api/v1/negocios/{negocioId}/personal
+ */
+export async function obtenerPersonalNegocio(negocioId: string): Promise<PersonalResumen[]> {
+  const response = await clienteApi.get<{ items: PersonalBackend[]; total: number }>(
+    `/negocios/${negocioId}/personal`
+  );
+  return response.data.items.map((p) => ({ id: p.id, nombre: p.nombre, activo: p.activo }));
 }

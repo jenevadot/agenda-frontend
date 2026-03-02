@@ -111,8 +111,7 @@ export default function PaginaInicio() {
             <Link to="/login">
               <Button
                 size="xl"
-                variant="secondary"
-                className="border-white text-white hover:bg-white hover:text-black min-w-[220px]"
+                className="bg-white text-black hover:bg-gray-100 min-w-[220px]"
               >
                 Iniciar sesion
               </Button>

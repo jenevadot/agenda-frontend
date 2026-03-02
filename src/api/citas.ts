@@ -59,6 +59,7 @@ export interface CitaCompleta {
   negocio: NegocioEnCita;
   servicio: ServicioEnCita;
   personal: PersonalEnCita;
+  tieneFeedback: boolean;
   creadoEn: string;
   actualizadoEn: string;
 }
@@ -87,6 +88,29 @@ export interface ListaCitasRespuesta {
 }
 
 /**
+ * Feedback types
+ */
+export type SatisfaccionCita = 'satisfecho' | 'normal' | 'no_satisfecho';
+export type MotivoCita = 'tecnica' | 'higiene' | 'duracion' | 'puntualidad' | 'comunicacion';
+
+export interface DatosCrearFeedback {
+  satisfaccion: SatisfaccionCita;
+  motivos: MotivoCita[];
+  recomienda: boolean;
+  comentario?: string;
+}
+
+export interface FeedbackCita {
+  id: string;
+  citaId: string;
+  satisfaccion: SatisfaccionCita;
+  motivos: MotivoCita[];
+  recomienda: boolean;
+  comentario?: string;
+  creadoEn: string;
+}
+
+/**
  * Backend response structures
  */
 interface CitaBackend {
@@ -108,6 +132,7 @@ interface CitaCompletaBackend {
   cliente_telefono: string;
   fecha_hora_inicio: string;
   fecha_hora_fin: string;
+  tiene_feedback: boolean;
   negocio: {
     id: string;
     nombre: string;
@@ -161,6 +186,7 @@ function transformarCitaCompleta(data: CitaCompletaBackend): CitaCompleta {
     clienteTelefono: data.cliente_telefono,
     fechaHoraInicio: data.fecha_hora_inicio,
     fechaHoraFin: data.fecha_hora_fin,
+    tieneFeedback: data.tiene_feedback ?? false,
     negocio: {
       id: data.negocio.id,
       nombre: data.negocio.nombre,
@@ -342,4 +368,38 @@ export async function cancelarEdicionCita(
   );
 
   return transformarCitaCompleta(response.data);
+}
+
+/**
+ * Create feedback for a completed appointment
+ * POST /api/v1/citas/{citaId}/feedback
+ */
+export async function crearFeedbackCita(
+  citaId: string,
+  datos: DatosCrearFeedback
+): Promise<FeedbackCita> {
+  const response = await clienteApi.post<{
+    id: string;
+    cita_id: string;
+    satisfaccion: SatisfaccionCita;
+    motivos: MotivoCita[];
+    recomienda: boolean;
+    comentario?: string;
+    creado_en: string;
+  }>(`/citas/${citaId}/feedback`, {
+    satisfaccion: datos.satisfaccion,
+    motivos: datos.motivos,
+    recomienda: datos.recomienda,
+    comentario: datos.comentario,
+  });
+
+  return {
+    id: response.data.id,
+    citaId: response.data.cita_id,
+    satisfaccion: response.data.satisfaccion,
+    motivos: response.data.motivos,
+    recomienda: response.data.recomienda,
+    comentario: response.data.comentario,
+    creadoEn: response.data.creado_en,
+  };
 }

@@ -13,7 +13,9 @@ import PaginaReserva from './pages/PaginaReserva';
 import PaginaNegocio from './pages/PaginaNegocio';
 import PaginaDetalleCita from './pages/PaginaDetalleCita';
 import PaginaEditarCita from './pages/PaginaEditarCita';
+import PaginaRebook from './pages/PaginaRebook';
 import PanelAdmin from './pages/PanelAdmin';
+import PaginaCuenta from './pages/PaginaCuenta';
 
 // Create QueryClient with configuration from RF-FE-051
 const queryClient = new QueryClient({
@@ -96,12 +98,32 @@ function App() {
                 }
               />
 
+              {/* Rebook appointment */}
+              <Route
+                path="/rebook/:negocioId/:citaId"
+                element={
+                  <RutaProtegida>
+                    <PaginaRebook />
+                  </RutaProtegida>
+                }
+              />
+
               {/* Admin panel - protected for business owners */}
               <Route
                 path="/admin/:negocioId/*"
                 element={
                   <RutaProtegida rolesPermitidos={['dueno_negocio']}>
                     <PanelAdmin />
+                  </RutaProtegida>
+                }
+              />
+
+              {/* Account page */}
+              <Route
+                path="/cuenta"
+                element={
+                  <RutaProtegida>
+                    <PaginaCuenta />
                   </RutaProtegida>
                 }
               />

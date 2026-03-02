@@ -1,3 +1,5 @@
+import type { DiaSemana } from '../schemas/preferencias';
+
 // User types
 export interface Usuario {
   id: string;
@@ -155,4 +157,34 @@ export interface CrearCitaRequest {
   fechaHoraCita: string;
   contacto: InfoContacto;
   notas?: string;
+}
+
+// User preferences
+export interface PreferenciasUsuario {
+  id: string;
+  usuarioId: string;
+  diasPreferentes: DiaSemana[];
+  negocioId: string | null;
+  personalId: string | null;
+  comentario: string | null;
+  creadoEn: string;
+  actualizadoEn: string;
+}
+
+export interface GuardarPreferenciasRequest {
+  diasPreferentes: DiaSemana[];
+  negocioId: string | null;
+  personalId: string | null;
+  comentario: string | null;
+}
+
+export interface ActualizarPerfilRequest {
+  nombreCompleto?: string;
+  telefono?: string;
+}
+
+export interface PersonalResumen {
+  id: string;
+  nombre: string;
+  activo: boolean;
 }

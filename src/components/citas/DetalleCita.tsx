@@ -6,8 +6,10 @@ import {
   User,
   Phone,
   Mail,
+  RotateCcw,
+  MessageSquare,
 } from 'lucide-react';
-import { parseISO, format } from 'date-fns';
+import { parseISO, format, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '../../lib/utils';
 import { Button } from '../comunes';
@@ -18,6 +20,8 @@ interface DetalleCitaProps {
   cita: CitaCompleta;
   onCancelar?: () => void;
   onEditar?: () => void;
+  onRebook?: () => void;
+  onFeedback?: () => void;
   isCancelando?: boolean;
 }
 
@@ -82,6 +86,8 @@ export function DetalleCita({
   cita,
   onCancelar,
   onEditar,
+  onRebook,
+  onFeedback,
   isCancelando,
 }: DetalleCitaProps) {
   const configEstado = obtenerConfigEstado(cita.estado);
@@ -89,6 +95,11 @@ export function DetalleCita({
 
   const puedeModificar =
     cita.estado === 'confirmada' || cita.estado === 'pendiente_actualizacion';
+
+  const puedeDarFeedback =
+    !cita.tieneFeedback &&
+    (cita.estado === 'completada' || cita.estado === 'confirmada') &&
+    isPast(parseISO(cita.fechaHoraFin));
 
   const fechaCita = parseISO(cita.fechaHoraInicio);
 
@@ -222,6 +233,26 @@ export function DetalleCita({
               {isCancelando ? 'Cancelando...' : 'Cancelar cita'}
             </Button>
           )}
+        </div>
+      )}
+
+      {/* Rebook action */}
+      {!puedeModificar && onRebook && (
+        <div className={cn('px-6 pt-4 border-t', !puedeDarFeedback && 'pb-6')}>
+          <Button variant="secondary" className="w-full" onClick={onRebook}>
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Reservar de nuevo
+          </Button>
+        </div>
+      )}
+
+      {/* Feedback action */}
+      {puedeDarFeedback && onFeedback && (
+        <div className="px-6 pb-6 pt-4">
+          <Button variant="ghost" className="w-full" onClick={onFeedback}>
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Dejar feedback
+          </Button>
         </div>
       )}
     </div>

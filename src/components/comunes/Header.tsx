@@ -47,6 +47,12 @@ export function Header() {
                 >
                   Mis Citas
                 </Link>
+                <Link
+                  to="/cuenta"
+                  className="text-gray-500 hover:text-black transition-colors relative underline-effect"
+                >
+                  Mi cuenta
+                </Link>
                 <div className="flex items-center gap-4 ml-4 pl-8 border-l border-gray-200">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
@@ -122,6 +128,13 @@ export function Header() {
                     onClick={() => setMenuAbierto(false)}
                   >
                     Mis Citas
+                  </Link>
+                  <Link
+                    to="/cuenta"
+                    className="px-4 py-3 text-black hover:bg-gray-50 rounded-xl transition-colors"
+                    onClick={() => setMenuAbierto(false)}
+                  >
+                    Mi cuenta
                   </Link>
                   <button
                     onClick={() => {
